@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  ADMIN
+  RESIDENT
+  SECURITY
+  MAINTENANCE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("TENANT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resident         Resident?
+  announcements    Announcement[]
+  assignedRequests MaintenanceRequest[]
+}
+
+model Resident {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique
+  user        User      @relation(fields: [userId], references: [id])
+  apartmentId Int
+  apartment   Apartment @relation(fields: [apartmentId], references: [id])
+  phone       String?
+  moveInDate  DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  visitors            Visitor[]
+  maintenanceRequests MaintenanceRequest[]
+}
+
+model Apartment {
+  id         Int      @id @default(autoincrement())
+  unitNumber String   @unique
+  block      String?
+  status     String   @default("occupied") // occupied | vacant
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  residents Resident[]
+}
+
+model Visitor {
+  id             Int       @id @default(autoincrement())
+  name           String
+  phone          String?
+  purpose        String?
+  hostResident   Resident  @relation(fields: [hostResidentId], references: [id])
+  hostResidentId Int
+  checkInTime    DateTime  @default(now())
+  checkOutTime   DateTime?
+  approvedBy     Int?
+  createdAt      DateTime  @default(now())
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum RequestPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model MaintenanceRequest {
+  id            Int             @id @default(autoincrement())
+  title         String
+  description   String
+  status        RequestStatus   @default(PENDING)
+  priority      RequestPriority @default(MEDIUM)
+  submittedBy   Resident        @relation(fields: [submittedById], references: [id])
+  submittedById Int
+  assignedTo    User?           @relation(fields: [assignedToId], references: [id])
+  assignedToId  Int?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Announcement {
+  id         Int      @id @default(autoincrement())
+  title      String
+  body       String
+  postedBy   User     @relation(fields: [postedById], references: [id])
+  postedById Int
+  audience   Role? // null = everyone, or restrict to a specific role
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
