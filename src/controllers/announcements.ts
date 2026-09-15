@@ -27,7 +27,11 @@ export async function createAnnouncement(req: Request, res: Response) {
 
     // TODO 2: check that a User with id `postedById` actually exists
     // (reuse prisma.user.findUnique — same pattern as checking residents/users before)
-    ()
+     
+     const existing = await prisma.user.findUnique({ where: { id: postedById } });
+    if (!existing) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     // TODO 3: create the announcement using prisma.announcement.create
     // data: title, body, postedById, and only include `audience` if it was provided
@@ -35,7 +39,21 @@ export async function createAnnouncement(req: Request, res: Response) {
     // include: postedBy, same shape as getAll above
     // don't forget res.status(201).json(...)
 
+    const announcement = await prisma.announcement.create({
+      data: {
+        title,
+        body,
+        postedById,
+        ...(audience ? { audience } : {}),
+      },
+      include: {
+        postedBy: { select: { id: true, name: true, email: true, role: true } },
+      },
+    });
 
+    res.status(201).json(announcement);
+    
+     
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to create announcement' });

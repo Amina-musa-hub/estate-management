@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { createApartmentSchema } from '../validators/apartments';
 
 export async function getAllApartments(req: Request, res: Response) {
   try {
@@ -10,14 +11,15 @@ export async function getAllApartments(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to fetch apartments' });
   }
 }
-
 export async function createApartment(req: Request, res: Response) {
   try {
-    const { unitNumber, block, status } = req.body;
+    const result = createApartmentSchema.safeParse(req.body);
 
-    if (!unitNumber) {
-      return res.status(400).json({ error: 'unitNumber is required' });
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.issues[0].message });
     }
+
+    const { unitNumber, block, status } = result.data;
 
     const apartment = await prisma.apartment.create({
       data: { unitNumber, block, status },
