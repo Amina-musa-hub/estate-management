@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { createResidentSchema } from '../validators/residents';
 
 export async function getAllResidents(req: Request, res: Response) {
   try {
@@ -20,11 +21,13 @@ export async function getAllResidents(req: Request, res: Response) {
 
 export async function createResident(req: Request, res: Response) {
   try {
-    const { userId, apartmentId, phone } = req.body;
+    const result = createResidentSchema.safeParse(req.body);
 
-    if (!userId || !apartmentId) {
-      return res.status(400).json({ error: 'userId and apartmentId are required' });
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.issues[0].message });
     }
+
+    const { userId, apartmentId, phone } = result.data;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {

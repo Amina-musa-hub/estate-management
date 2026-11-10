@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { createAnnouncementSchema } from '../validators/announcements';
 
 export async function getAllAnnouncements(req: Request, res: Response) {
   try {
@@ -18,17 +19,15 @@ export async function getAllAnnouncements(req: Request, res: Response) {
 
 export async function createAnnouncement(req: Request, res: Response) {
   try {
-    const { title, body, postedById, audience } = req.body;
+    const result = createAnnouncementSchema.safeParse(req.body);
 
-    // TODO 1: validate that `title`, `body`, and `postedById` exist
-      if(!title || !body || !postedById ) {
-        return res.status(400).json({ error: 'title, body, and postedById are required' });
-      }
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.issues[0].message });
+    }
 
-    // TODO 2: check that a User with id `postedById` actually exists
-    // (reuse prisma.user.findUnique — same pattern as checking residents/users before)
-     
-     const existing = await prisma.user.findUnique({ where: { id: postedById } });
+    const { title, body, postedById, audience } = result.data;
+
+    const existing = await prisma.user.findUnique({ where: { id: postedById } });
     if (!existing) {
       return res.status(404).json({ error: 'User not found' });
     }

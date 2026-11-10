@@ -7,10 +7,11 @@ const databaseUrl = new URL(process.env.DATABASE_URL!);
 const adapter = new PrismaMariaDb({
   host: databaseUrl.hostname,
   port: Number(databaseUrl.port),
-  user: databaseUrl.username,
-  password: databaseUrl.password,
+  user: decodeURIComponent(databaseUrl.username),
+  password: decodeURIComponent(databaseUrl.password),
   database: databaseUrl.pathname.slice(1),
   connectionLimit: 5,
+  allowPublicKeyRetrieval: true,
 });
 
 const prisma = new PrismaClient({ adapter });

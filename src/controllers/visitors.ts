@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { createVisitorSchema } from '../validators/visitors';
 
 export async function getAllVisitors(req: Request, res: Response) {
   try {
@@ -21,12 +22,14 @@ export async function getAllVisitors(req: Request, res: Response) {
 
 export async function createVisitor(req: Request, res: Response) {
   try {
-    const { name, hostResidentId, phone, purpose } = req.body;
+    const result = createVisitorSchema.safeParse(req.body);
 
-   if(!name || !hostResidentId) {
-      return res.status(400).json({ error: 'name and hostResidentId are required' });
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.issues[0].message });
     }
-   
+
+    const { name, hostResidentId, phone, purpose } = result.data;
+
     const resident = await prisma.resident.findUnique({ where: { id: hostResidentId } });
     if (!resident) {
       return res.status(404).json({ error: 'Host resident not found' });
@@ -48,4 +51,4 @@ export async function createVisitor(req: Request, res: Response) {
     console.error(error);
     res.status(500).json({ error: 'Failed to create visitor' });
   }
-}       
+}

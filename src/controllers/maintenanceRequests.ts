@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+ import { createMaintenanceRequestSchema } from '../validators/maintenanceRequests';
 
 export async function getAllMaintenanceRequests(req: Request, res: Response) {
   try {
@@ -17,14 +18,15 @@ export async function getAllMaintenanceRequests(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to fetch maintenance requests' });
   }
 }
-
 export async function createMaintenanceRequest(req: Request, res: Response) {
   try {
-    const { title, description, submittedById, priority } = req.body;
+    const result = createMaintenanceRequestSchema.safeParse(req.body);
 
-    if (!title || !description || !submittedById) {
-      return res.status(400).json({ error: 'title, description, and submittedById are required' });
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.issues[0].message });
     }
+
+    const { title, description, submittedById, priority } = result.data;
 
     if (!(await prisma.resident.findUnique({ where: { id: submittedById } }))) {
       return res.status(404).json({ error: 'Resident with submittedById not found' });
