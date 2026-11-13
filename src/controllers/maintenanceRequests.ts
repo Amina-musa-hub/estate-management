@@ -53,3 +53,51 @@ export async function createMaintenanceRequest(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to create maintenance request' });
   }
 }
+import { updateMaintenanceRequestSchema } from '../validators/maintenanceRequests';
+
+export async function updateMaintenanceRequest(req: Request, res: Response) {
+  try {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid request id' });
+    }
+
+    const result = updateMaintenanceRequestSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.issues[0].message });
+    }
+
+    const { status, assignedToId } = result.data;
+
+    const existing = await prisma.maintenanceRequest.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Maintenance request not found' });
+    }
+
+    if (assignedToId !== undefined) {
+      const staff = await prisma.user.findUnique({ where: { id: assignedToId } });
+      if (!staff || staff.role !== 'MAINTENANCE') {
+        return res.status(400).json({ error: 'assignedToId must be a MAINTENANCE user' });
+      }
+    }
+
+    const updated = await prisma.maintenanceRequest.update({
+      where: { id },
+      data: {
+        ...(status && { status }),
+        ...(assignedToId !== undefined && { assignedToId }),
+      },
+      include: {
+        submittedBy: {
+          include: { user: { select: { id: true, name: true, email: true } } },
+        },
+        assignedTo: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update maintenance request' });
+  }
+}

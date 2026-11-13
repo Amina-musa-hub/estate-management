@@ -1,9 +1,15 @@
 import { Router } from 'express';
-import { getAllMaintenanceRequests, createMaintenanceRequest } from '../controllers/maintenanceRequests';
+import {
+  getAllMaintenanceRequests,
+  createMaintenanceRequest,
+  updateMaintenanceRequest,
+} from '../controllers/maintenanceRequests';
+import { requireRole } from '../middleware/auth';
 
 const router = Router();
 
 router.get('/', getAllMaintenanceRequests);
-router.post('/',createMaintenanceRequest);
+router.post('/', requireRole('RESIDENT', 'ADMIN'), createMaintenanceRequest);
+router.patch('/:id', requireRole('ADMIN', 'MAINTENANCE'), updateMaintenanceRequest);
 
 export default router;

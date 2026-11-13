@@ -22,11 +22,11 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/apartments', authenticate, apartmentRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/residents', residentRoutes);
-app.use('/api/visitors', visitorRoutes);
-app.use('/api/maintenance-requests', maintenanceRequestRoutes);
-app.use('/api/announcements', announcementRoutes);
+app.use('/api/users', authenticate, userRoutes);
+app.use('/api/residents', authenticate, residentRoutes);
+app.use('/api/visitors', authenticate, visitorRoutes);
+app.use('/api/maintenance-requests', authenticate, maintenanceRequestRoutes);
+app.use('/api/announcements', authenticate, announcementRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
