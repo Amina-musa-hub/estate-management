@@ -7,6 +7,7 @@ import residentRoutes from './routes/residents';
 import visitorRoutes from './routes/visitors';
 import maintenanceRequestRoutes from './routes/maintenanceRequests';
 import announcementRoutes from './routes/announcements';
+import authRoutes from './routes/auth';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/residents', residentRoutes);
 app.use('/api/visitors', visitorRoutes);
 app.use('/api/maintenance-requests', maintenanceRequestRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
