@@ -13,13 +13,13 @@ export async function login(req: Request, res: Response) {
     }
 
     const { email, password } = result.data;
-
+    
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
-
+  
     const passwordMatches = await bcrypt.compare(password, user.password);
 
     if (!passwordMatches) {
@@ -31,11 +31,12 @@ export async function login(req: Request, res: Response) {
       process.env.JWT_SECRET as string,
       { expiresIn: '1d' }
     );
-
+    
     res.json({
-      token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
-    });
+        token,
+        user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Login failed' });
